@@ -18,17 +18,17 @@ class IdentifyCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.slash_command(name='identify', description='Describe an image')
+    @commands.slash_command(name='identify', description='Опишу тебе картинку тэгами')
     @option(
         'init_image',
         discord.Attachment,
-        description='The image to identify',
+        description='Выбрать картинку из устройства',
         required=False,
     )
     @option(
         'init_url',
         str,
-        description='The URL image to identify. This overrides init_image!',
+        description='Ввести ссылку на картинку',
         required=False,
     )
     async def dream_handler(self, ctx: discord.ApplicationContext, *,
@@ -41,13 +41,15 @@ class IdentifyCog(commands.Cog):
             try:
                 init_image = requests.get(init_url)
             except(Exception,):
-                await ctx.send_response('URL image not found!\nI have nothing to work with...', ephemeral=True)
                 has_image = False
+                await ctx.send_response('Не вижу ссылку на картинку!\nК сожалению, я ничего не могу по делать...', ephemeral=True)
+                
 
-        # fail if no image is provided
+
         if init_url is None:
+        # fail if no image is provided
             if init_image is None:
-                await ctx.send_response('I need an image to identify!', ephemeral=True)
+                await ctx.send_response('Эй! Мне нужна картинка!', ephemeral=True)
                 has_image = False
 
         view = viewhandler.DeleteView(ctx.author.id)
@@ -62,16 +64,16 @@ class IdentifyCog(commands.Cog):
                         user_already_in_queue = True
                         break
                 if user_already_in_queue:
-                    await ctx.send_response(content=f'Please wait! You\'re queued up.', ephemeral=True)
+                    await ctx.send_response(content=f'Абажди, перед тобой ещё другие желающие!', file=discord.File('waiting.gif'), ephemeral=True)
                 else:
                     queuehandler.GlobalQueue.identify_q.append(queuehandler.IdentifyObject(ctx, init_image, view))
                     await ctx.send_response(
-                        f"<@{ctx.author.id}>, I'm identifying the image!\nQueue: ``{len(queuehandler.union(*queues))}``",
+                        f"<@{ctx.author.id}>, Ща всё буит! \n А кстати, вот твой номер очереди - ``{len(queuehandler.union(*queues))}``",
                         delete_after=45.0)
             else:
                 await queuehandler.process_dream(self, queuehandler.IdentifyObject(ctx, init_image, view))
                 await ctx.send_response(
-                    f"<@{ctx.author.id}>, I'm identifying the image!\nQueue: ``{len(queuehandler.union(*queues))}``",
+                    f"<@{ctx.author.id}>, Ща всё буит! \n А кстати, вот твой номер очереди - ``{len(queuehandler.union(*queues))}``",
                     delete_after=45.0)
 
     def dream(self, event_loop: AbstractEventLoop, queue_object: queuehandler.IdentifyObject):
@@ -103,7 +105,7 @@ class IdentifyCog(commands.Cog):
             embed = discord.Embed()
             embed.set_image(url=queue_object.init_image.url)
             embed.colour = settings.global_var.embed_color
-            embed.add_field(name=f'I think this is', value=f'``{response_data.get("caption")}``', inline=False)
+            embed.add_field(name=f'Мой цифровой мозг думает, что это... \n', value=f'``{response_data.get("caption")}``', inline=False)
 
             footer_args = dict(text=f'{queue_object.ctx.author.name}#{queue_object.ctx.author.discriminator}')
             if queue_object.ctx.author.avatar is not None:

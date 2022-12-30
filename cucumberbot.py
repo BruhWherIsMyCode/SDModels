@@ -26,11 +26,11 @@ self.load_extension('core.tipscog')
 
 
 # stats slash command
-@self.slash_command(name='stats', description='How many images have I generated?')
+@self.slash_command(name='stats', description='Сколько картинок я создал?')
 async def stats(ctx):
     with open('resources/stats.txt', 'r') as f:
         data = list(map(int, f.readlines()))
-    embed = discord.Embed(title='Art generated', description=f'I have created {data[0]} pictures!',
+    embed = discord.Embed(title='Артов создано', description=f'Я создал целых {data[0]} артов!',
                           color=settings.global_var.embed_color)
     await ctx.respond(embed=embed)
 
@@ -38,7 +38,7 @@ async def stats(ctx):
 @self.event
 async def on_ready():
     self.logger.info(f'Logged in as {self.user.name} ({self.user.id})')
-    await self.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name='ГжиТиЭ'))
+    await self.change_presence(activity=discord.Activity(type=discord.ActivityType.playing, name='ГжиТиЭй 6'))
     # because guilds are only known when on_ready, run files check for guilds
     settings.guilds_check(self)
 

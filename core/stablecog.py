@@ -43,7 +43,7 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
 
     @commands.slash_command(name='draw', description='Создать арт')
     @option(
-        'тег',
+        'prompt',
         str,
         description='Напиши теги, по которыми ИИ будет создавать арт',
         required=True,
@@ -51,103 +51,103 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
     @option(
         'negative_prompt',
         str,
-        description='Negative prompts to exclude from output.',
+        description='Исключающие теги (можешь не писать, они заранее настроены сервером)',
         required=False,
     )
     @option(
         'data_model',
         str,
-        description='Select the data model for image generation',
+        description='Использование другой модели ИИ',
         required=False,
         autocomplete=discord.utils.basic_autocomplete(model_autocomplete),
     )
     @option(
         'steps',
         int,
-        description='The amount of steps to sample the model.',
+        description='Количество шагов обработки, сколько будет проводить ИИ',
         min_value=1,
         required=False,
     )
     @option(
         'width',
         int,
-        description='Width of the generated image',
+        description='Ширина итоговой картинки',
         required=False,
         choices=[x for x in range(192, 1088, 64)]
     )
     @option(
         'height',
         int,
-        description='Height of the generated image',
+        description='Длинна итоговой картинки',
         required=False,
         choices=[x for x in range(192, 1088, 64)]
     )
     @option(
         'guidance_scale',
         str,
-        description='Classifier-Free Guidance scale',
+        description='Ограничитель \"свободы\" ИИ (CFG scale)',
         required=False,
     )
     @option(
         'sampler',
         str,
-        description='The sampler to use for generation',
+        description='Метод обработки',
         required=False,
         choices=settings.global_var.sampler_names,
     )
     @option(
         'seed',
         int,
-        description='The seed to use for reproducibility',
+        description='Ключ генерации для воспроизводимости старого арта',
         required=False,
     )
     @option(
         'strength',
         str,
-        description='The amount in which init_image will be altered (0.0 to 1.0).'
+        description='На сколько сильно будет изменён образец? (0.0 to 1.0)'
     )
     @option(
         'init_image',
         discord.Attachment,
-        description='The starter image for generation. Remember to set strength value!',
+        description='Начальная картинка (образец) для генерации арта. Запомнти число \"strength"!',
         required=False,
     )
     @option(
         'init_url',
         str,
-        description='The starter URL image for generation. This overrides init_image!',
+        description='Ссылка на начальную картинку (образец) для генерации арта',
         required=False,
     )
     @option(
         'count',
         int,
-        description='The number of images to generate. This is "Batch count", not "Batch size".',
+        description='Количество генерируемых картинок',
         required=False,
     )
     @option(
         'style',
         str,
-        description='Apply a predefined style to the generation.',
+        description='Накладывает стиль на с созданный арт (У нас таких нет, но может будет в будущем \":3)',
         required=False,
         autocomplete=discord.utils.basic_autocomplete(style_autocomplete),
-    )
+   )
     @option(
         'facefix',
         str,
-        description='Tries to improve faces in images.',
+        description='Алгоритм для исправление лиц (Кое как работает, точнее никак \":3)',
         required=False,
         choices=settings.global_var.facefix_models,
     )
     @option(
         'highres_fix',
         bool,
-        description='Tries to fix issues from generating high-res images. Takes longer!',
+        description='Алгоритм для улучшения качества арта, если образец явно качеством выше.\n(Занимает кучу времени!)',
         required=False,
     )
     @option(
         'clip_skip',
         int,
-        description='Number of last layers of CLIP model to skip',
+        description='Количество пропускаемых слоев алгоритима CLIP (Неактуально)',
         required=False,
         choices=[x for x in range(1, 13, 1)]
     )
@@ -230,39 +230,39 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
             try:
                 init_image = requests.get(init_url)
             except(Exception,):
-                await ctx.send_response('URL image not found!\nI will do my best without it!')
+                await ctx.send_response('ЭЭЭ... Я не нашёл картинку по ссылке\n Я попробую без него \":3')
 
         # formatting aiya initial reply
         reply_adds = ''
         # lower step value to the highest setting if user goes over max steps
         if steps > settings.read(guild)['max_steps']:
             steps = settings.read(guild)['max_steps']
-            reply_adds = reply_adds + f'\nExceeded maximum of ``{steps}`` steps! This is the best I can do...'
+            reply_adds = reply_adds + f'\n Превышен максимум из ``{steps}`` шагов обработки! Это максимум, что я могу сделать...'
         if model_name != 'Default':
-            reply_adds = reply_adds + f'\nModel: ``{model_name}``'
-        if negative_prompt != '':
-            reply_adds = reply_adds + f'\nNegative Prompt: ``{negative_prompt}``'
+            reply_adds = reply_adds + f'\nМодель ИИ: ``{model_name}``'
+#        if negative_prompt != '':
+#            reply_adds = reply_adds + f'\nИсключающие тэги: ``{negative_prompt}``'
         if (width != 512) or (height != 512):
-            reply_adds = reply_adds + f'\nSize: ``{width}``x``{height}``'
+            reply_adds = reply_adds + f'\nРазмер: ``{width}``x``{height}``'
         if guidance_scale != '7.0':
-            reply_adds = reply_adds + f'\nGuidance Scale: ``{guidance_scale}``'
+            reply_adds = reply_adds + f'\n Уровень \"свободы\" ИИ (CFG scale): ``{guidance_scale}``'
         if sampler != 'Euler a':
-            reply_adds = reply_adds + f'\nSampler: ``{sampler}``'
+            reply_adds = reply_adds + f'\n Алгоритм обработки: ``{sampler}``'
         if init_image:
-            reply_adds = reply_adds + f'\nStrength: ``{strength}``'
-            reply_adds = reply_adds + f'\nURL Init Image: ``{init_image.url}``'
+            reply_adds = reply_adds + f'\n Зависимость от \"образца\": ``{strength}``'
+            reply_adds = reply_adds + f'\nСсылка на картинку: ``{init_image.url}``'
         if count != 1:
             max_count = settings.read(guild)['max_count']
             if count > max_count:
                 count = max_count
-                reply_adds = reply_adds + f'\nExceeded maximum of ``{count}`` images! This is the best I can do...'
-            reply_adds = reply_adds + f'\nCount: ``{count}``'
+                reply_adds = reply_adds + f'\n Превышен максимум из ``{count}`` количества картинок! Это мой максимум, что я могу сделать...'
+            reply_adds = reply_adds + f'\nКоличество картинок: ``{count}``'
         if style != 'None':
-            reply_adds = reply_adds + f'\nStyle: ``{style}``'
-        if facefix != 'None':
-            reply_adds = reply_adds + f'\nFace restoration: ``{facefix}``'
+            reply_adds = reply_adds + f'\nДобавочный стиль арта: ``{style}``'
+#        if facefix != 'None':
+#            reply_adds = reply_adds + f'\nFace restoration: ``{facefix}``'
         if clip_skip != 1:
-            reply_adds = reply_adds + f'\nCLIP skip: ``{clip_skip}``'
+            reply_adds = reply_adds + f'\nАлгоритм CLIP skip: ``{clip_skip}``'
 
         # set up tuple of parameters to pass into the Discord view
         input_tuple = (
@@ -279,15 +279,15 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
                     user_already_in_queue = True
                     break
             if user_already_in_queue:
-                await ctx.send_response(content=f'Please wait! You\'re queued up.', ephemeral=True)
+                await ctx.send_response(content=f'Погоди, ты в очереди!', ephemeral=True)
             else:
                 queuehandler.GlobalQueue.draw_q.append(queuehandler.DrawObject(*input_tuple, view))
                 await ctx.send_response(
-                    f'<@{ctx.author.id}>, {settings.messages()}\nQueue: ``{len(queuehandler.union(*queues))}`` - ``{simple_prompt}``\nSteps: ``{steps}`` - Seed: ``{seed}``{reply_adds}')
+                    f'<@{ctx.author.id}>, {settings.messages()}\nНомер очереди: ``{len(queuehandler.union(*queues))}`` - ``{simple_prompt}``\nКоличество шагов обработки: ``{steps}`` \nКлюч генерации: ``{seed}``{reply_adds}')
         else:
             await queuehandler.process_dream(self, queuehandler.DrawObject(*input_tuple, view))
             await ctx.send_response(
-                f'<@{ctx.author.id}>, {settings.messages()}\nQueue: ``{len(queuehandler.union(*queues))}`` - ``{simple_prompt}``\nSteps: ``{steps}`` - Seed: ``{seed}``{reply_adds}')
+                f'<@{ctx.author.id}>, {settings.messages()}\nТекущий в номер очереди: ``{len(queuehandler.union(*queues))}`` \nИспользумые тэги: ``{simple_prompt}``\nКоличество шагов обработки: ``{steps}`` \nКлюч генерации: ``{seed}``{reply_adds}')
 
     # generate the image
     def dream(self, event_loop: AbstractEventLoop, queue_object: queuehandler.DrawObject):
@@ -414,7 +414,7 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
                     buffer.seek(0)
                 draw_time = '{0:.3f}'.format(end_time - start_time)
                 message = f'Кароче, над твоим артом по тегам: ``{queue_object.simple_prompt}``, я тупил примерно ``{draw_time}`` ' \
-                          f'секунд\n> *{queue_object.ctx.author.name}#{queue_object.ctx.author.discriminator}*'
+                          f'секунд\n'
                 files = [discord.File(fp=buffer, filename=f'{queue_object.seed}-{i}.png') for (i, buffer) in
                          enumerate(buffer_handles)]
                 event_loop.create_task(

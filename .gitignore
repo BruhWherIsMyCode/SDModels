@@ -1,0 +1,8 @@
+# Ignore All
+.*
+*
+
+# Exceptions
+!.gitignore
+!core/
+*.py

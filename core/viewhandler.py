@@ -111,7 +111,8 @@ class DrawView(View):
     async def button_draw(self, button, interaction):
         try:
             # check if the output is from the person who requested it
-            end_user = f'{interaction.user.name}#{interaction.user.discriminator}'
+#            end_user = f'{interaction.user.name}#{interaction.user.discriminator}'
+            end_user = f'{interaction.user.id}'
             if end_user in self.message.content:
                 # if there's room in the queue, open up the modal
                 if queuehandler.GlobalQueue.dream_thread.is_alive():
@@ -121,20 +122,20 @@ class DrawView(View):
                             user_already_in_queue = True
                             break
                     if user_already_in_queue:
-                        await interaction.response.send_message(content=f"Please wait! You're queued up.",
+                        await interaction.response.send_message(content=f"Тихо! У тебя очередь!",
                                                                 ephemeral=True)
                     else:
                         await interaction.response.send_modal(DrawModal(self.input_tuple))
                 else:
                     await interaction.response.send_modal(DrawModal(self.input_tuple))
             else:
-                await interaction.response.send_message("You can't use other people's 🖋!", ephemeral=True)
+                await interaction.response.send_message("Неа, ты не можешь 🖋 чужие арты!", ephemeral=True)
         except Exception as e:
             print('The pen button broke: ' + str(e))
             # if interaction fails, assume it's because aiya restarted (breaks buttons)
             button.disabled = True
             await interaction.response.edit_message(view=self)
-            await interaction.followup.send("I may have been restarted. This button no longer works.", ephemeral=True)
+            await interaction.followup.send("Эта кнопка больше не работает...", ephemeral=True)
 
     # the 🎲 button will take the same parameters for the image, change the seed, and add a task to the queue
     @discord.ui.button(
@@ -143,7 +144,8 @@ class DrawView(View):
     async def button_roll(self, button, interaction):
         try:
             # check if the output is from the person who requested it
-            end_user = f'{interaction.user.name}#{interaction.user.discriminator}'
+#            end_user = f'{interaction.user.name}#{interaction.user.discriminator}'
+            end_user = f'{interaction.user.id}'
             if end_user in self.message.content:
                 # update the tuple with a new seed
                 new_seed = list(self.input_tuple)
@@ -159,7 +161,7 @@ class DrawView(View):
                             user_already_in_queue = True
                             break
                     if user_already_in_queue:
-                        await interaction.response.send_message(content=f"Please wait! You're queued up.",
+                        await interaction.response.send_message(content=f"Тихо! У тебя очередь!",
                                                                 ephemeral=True)
                     else:
                         button.disabled = True
@@ -170,7 +172,7 @@ class DrawView(View):
 
                         queuehandler.GlobalQueue.draw_q.append(queuehandler.DrawObject(*seed_tuple, DrawView(seed_tuple)))
                         await interaction.followup.send(
-                            f'<@{interaction.user.id}>, {settings.messages()}\nQueue: ``{len(queuehandler.union(*queues))}`` - ``{seed_tuple[17]}``\nNew seed:``{seed_tuple[9]}``')
+                            f'<@{interaction.user.id}>, {settings.messages()}\nНомер очереди: ``{len(queuehandler.union(*queues))}`` - ``{seed_tuple[17]}``\nНовый ключ генерации (seed):``{seed_tuple[9]}``')
                 else:
                     button.disabled = True
                     await interaction.response.edit_message(view=self)
@@ -180,15 +182,15 @@ class DrawView(View):
 
                     await queuehandler.process_dream(draw_dream, queuehandler.DrawObject(*seed_tuple, DrawView(seed_tuple)))
                     await interaction.followup.send(
-                        f'<@{interaction.user.id}>, {settings.messages()}\nQueue: ``{len(queuehandler.union(*queues))}`` - ``{seed_tuple[17]}``\nNew Seed:``{seed_tuple[9]}``')
+                        f'<@{interaction.user.id}>, {settings.messages()}\nНомер очереди: ``{len(queuehandler.union(*queues))}`` - ``{seed_tuple[17]}``\nНовый ключ генерации (seed):``{seed_tuple[9]}``')
             else:
-                await interaction.response.send_message("You can't use other people's 🎲!", ephemeral=True)
+                await interaction.response.send_message("Неа, ты не можешь 🎲 чужие арты!", ephemeral=True)
         except Exception as e:
-            print('The dice roll button broke: ' + str(e))
+            print('Купик сломался...' + str(e))
             # if interaction fails, assume it's because aiya restarted (breaks buttons)
             button.disabled = True
             await interaction.response.edit_message(view=self)
-            await interaction.followup.send("I may have been restarted. This button no longer works.", ephemeral=True)
+            await interaction.followup.send("Эта кнопка больше не работает...", ephemeral=True)
 
     # the 📋 button will let you review the parameters of the generation
     @discord.ui.button(
@@ -216,21 +218,20 @@ class DrawView(View):
             full_name = full_name.split('/', 1)[-1].split('\\', 1)[-1]
 
             # generate the command for copy-pasting, and also add embed fields
-            embed = discord.Embed(title="About the image!", description="")
+            embed = discord.Embed(title="Данные про картинку!", description="")
             embed.colour = settings.global_var.embed_color
-            embed.add_field(name=f'Prompt', value=f'``{rev[17]}``', inline=False)
+            embed.add_field(name=f'Тэги', value=f'``{rev[17]}``', inline=False)
             copy_command = f'/draw prompt:{rev[17]} data_model:{model_name} steps:{rev[4]} width:{rev[5]} height:{rev[6]} guidance_scale:{rev[7]} sampler:{rev[8]} seed:{rev[9]}'
             if rev[2] != '':
                 copy_command = copy_command + f' negative_prompt:{rev[2]}'
-                embed.add_field(name=f'Negative prompt', value=f'``{rev[2]}``', inline=False)
+                embed.add_field(name=f'Исключающие тэги', value=f'``{rev[2]}``', inline=False)
             if activator_token:
                 embed.add_field(name=f'Data model',
                                 value=f'Display name - ``{model_name}``\nFull name - ``{full_name}``\nActivator token - ``{activator_token}``',
                                 inline=False)
             else:
-                embed.add_field(name=f'Data model', value=f'Display name - ``{model_name}``\nFull name - ``{full_name}``',
-                                inline=False)
-            extra_params = f'Sampling steps: ``{rev[4]}``\nSize: ``{rev[5]}x{rev[6]}``\nClassifier-free guidance scale: ``{rev[7]}``\nSampling method: ``{rev[8]}``\nSeed: ``{rev[9]}``'
+                embed.add_field(name=f'Data model', value=f'Display name - ``{model_name}``\nFull name - ``{full_name}``',                                inline=False)
+            extra_params = f'Использованное количество шагов (steps): ``{rev[4]}``\nРазмер: ``{rev[5]}x{rev[6]}``\nЧисленный размер \"свободы\" ИИ (CFG scale): ``{rev[7]}``\nМетод обработки: ``{rev[8]}``\nКлюч генерации (seed): ``{rev[9]}``'
             if rev[11]:
                 # not interested in adding embed fields for strength and init_image
                 copy_command = copy_command + f' strength:{rev[10]} init_url:{rev[11].url}'
@@ -248,16 +249,16 @@ class DrawView(View):
             if rev[16] != 1:
                 copy_command = copy_command + f' clip_skip:{rev[16]}'
                 extra_params = extra_params + f'\nCLIP skip: ``{rev[16]}``'
-            embed.add_field(name=f'Other parameters', value=extra_params, inline=False)
-            embed.add_field(name=f'Command for copying', value=f'``{copy_command}``', inline=False)
+            embed.add_field(name=f'Другие параметры', value=extra_params, inline=False)
+            embed.add_field(name=f'Команда для копирования (Уберите знаки ` в начале и в конце!)', value=f'``{copy_command}``', inline=False)
 
             await interaction.response.send_message(embed=embed, ephemeral=True)
         except Exception as e:
-            print('The clipboard button broke: ' + str(e))
+            print('The clipboard button broke: Кнопка \"буфера обмена\" сломана... ' + str(e))
             # if interaction fails, assume it's because aiya restarted (breaks buttons)
             button.disabled = True
             await interaction.response.edit_message(view=self)
-            await interaction.followup.send("I may have been restarted. This button no longer works.", ephemeral=True)
+            await interaction.followup.send("Эта кнопка больше не работает...", ephemeral=True)
 
     # the button to delete generated images
     @discord.ui.button(
@@ -266,16 +267,17 @@ class DrawView(View):
     async def delete(self, button, interaction):
         try:
             # check if the output is from the person who requested it
-            end_user = f'{interaction.user.name}#{interaction.user.discriminator}'
+#            end_user = f'{interaction.user.name}#{interaction.user.discriminator}'
+            end_user = f'{interaction.user.id}'
             if end_user in self.message.content:
                 await interaction.message.delete()
             else:
-                await interaction.response.send_message("You can't delete other people's images!", ephemeral=True)
+                await interaction.response.send_message("Ты не можешь удалять картинки других людей!", ephemeral=True)
         except(Exception,):
             button.disabled = True
             await interaction.response.edit_message(view=self)
-            await interaction.followup.send("I may have been restarted. This button no longer works.\n"
-                                            "You can react with ❌ to delete the image.", ephemeral=True)
+            await interaction.followup.send("Эта кнопка больше не работает...\n", ephemeral=True)
+                                            
 
 
 # creating the view that holds a button to delete output
@@ -293,4 +295,4 @@ class DeleteView(View):
             button.disabled = True
             await interaction.message.delete()
         else:
-            await interaction.response.send_message("You can't delete other people's images!", ephemeral=True)
+            await interaction.response.send_message("Ты не можешь удалять картинки других людей!", ephemeral=True)

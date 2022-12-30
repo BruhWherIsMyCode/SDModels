@@ -16,17 +16,23 @@ class SettingsCog(commands.Cog):
             model for model in settings.global_var.model_names
         ]
 
-    @commands.slash_command(name='settings', description='Review and change server defaults')
+    @commands.slash_command(name='settings', description='Проверить и изменить мои настройки для этого сервера')
     @option(
         'current_settings',
         bool,
-        description='Show the current defaults for the server.',
+        description='Показать текущие настройки.',
         required=False,
     )
+#    @option(
+#        'display_nprompt',
+#        bool,
+#        description='Показать исключающие тэги',
+#        required=False,
+#    )
     @option(
         'n_prompt',
         str,
-        description='Set default negative prompt for the server',
+        description='Установить исключающие тэги (negative prompt) для этого сервера',
         required=False,
     )
     @option(
@@ -46,49 +52,50 @@ class SettingsCog(commands.Cog):
     @option(
         'max_steps',
         int,
-        description='Set default maximum steps for the server',
+        description='Установить максимум шагов для ИИ',
         min_value=1,
         required=False,
     )
     @option(
         'width',
         int,
-        description='Set default width for the server',
+        description='Установить стандартную ширину картинки для этого сервера',
         required=False,
         choices=[x for x in range(192, 1088, 64)]
     )
     @option(
         'height',
         int,
-        description='Set default height for the server',
+        description='Установить стандартную высоту картинки для этого сервера',
         required=False,
         choices=[x for x in range(192, 1088, 64)]
     )
     @option(
         'sampler',
         str,
-        description='Set default sampler for the server',
+        description='Установить стандартную пробоотборник для этого сервера',
         required=False,
         choices=settings.global_var.sampler_names,
     )
     @option(
         'count',
         int,
-        description='Set default count for the server',
+        description='Установить стандартное количество картинок за раз для этого сервера',
         min_value=1,
         required=False,
     )
     @option(
         'max_count',
         int,
-        description='Set default maximum count for the server',
+        description='Установить максимальное количество картинок за раз для этого сервера',
         min_value=1,
         required=False,
     )
+    
     @option(
         'clip_skip',
         int,
-        description='Set default CLIP skip for the server',
+        description='Установить стандартное значение CLIP Skip для этого сервера (не акутально)',
         required=False,
         choices=[x for x in range(1, 13, 1)]
     )
@@ -104,10 +111,11 @@ class SettingsCog(commands.Cog):
                                count: Optional[int] = None,
                                max_count: Optional[int] = None,
                                clip_skip: Optional[int] = 0):
+#                               display_nprompt: Optional[bool] = True
         guild = '% s' % ctx.guild_id
         reviewer = settings.read(guild)
         # create the embed for the reply
-        embed = discord.Embed(title="Summary", description="")
+        embed = discord.Embed(title="Текущие настройки", description="")
         embed.colour = settings.global_var.embed_color
         current = ''
         new = ''
@@ -119,7 +127,7 @@ class SettingsCog(commands.Cog):
                 if value == '':
                     value = ' '
                 current = current + f'\n{key} - ``{value}``'
-            embed.add_field(name=f'Current defaults', value=current, inline=False)
+            embed.add_field(name=f'Настройки которые дейстивиельны для этого сервера:', value=current, inline=False)
 
         # run through each command and update the defaults user selects
         if n_prompt != 'unset':
@@ -162,7 +170,7 @@ class SettingsCog(commands.Cog):
             # automatically lower default count if max count goes below it
             if max_count < reviewer['default_count']:
                 settings.update(guild, 'default_count', max_count)
-                new = new + f'\nDefault count is too high! Lowering to ``{max_count}``.'
+                new = new + f'\nЭэээ, не, слишком много картинок хочешь, понижаю до - ``{max_count}``.'
             set_new = True
 
         if clip_skip != 0:
@@ -174,7 +182,7 @@ class SettingsCog(commands.Cog):
         reviewer = settings.read(guild)
         if steps != 1:
             if steps > reviewer['max_steps']:
-                new = new + f"\nMax steps is ``{reviewer['max_steps']}``! You can't go beyond it!"
+                new = new + f"\nМаксимально количество шагов ``{reviewer['max_steps']}``! Ты не можешь поставить число больше этого!"
             else:
                 settings.update(guild, 'default_steps', steps)
                 new = new + f'\nSteps: ``{steps}``'
@@ -182,11 +190,16 @@ class SettingsCog(commands.Cog):
 
         if count is not None:
             if count > reviewer['max_count']:
-                new = new + f"\nMax count is ``{reviewer['max_count']}``! You can't go beyond it!"
+                new = new + f"\nМаксимально количество одновременных картинок ``{reviewer['max_count']}``! Ты не можешь поставить число больше этого!"
             else:
                 settings.update(guild, 'default_count', count)
                 new = new + f'\nCount: ``{count}``'
             set_new = True
+
+#        if display_nprompt is not None:
+#            settings.update(guild, 'display_nprompt', display_nprompt)
+#            new = new + f'\nDisplay negative prompt: ``"{display_nprompt}"``'
+#            set_new = True
 
         if set_new:
             embed.add_field(name=f'New defaults', value=new, inline=False)

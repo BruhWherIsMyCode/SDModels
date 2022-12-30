@@ -24,7 +24,7 @@ class UpscaleCog(commands.Cog):
         self.wait_message = []
         self.bot = bot
         self.file_name = ''
-
+""""
     @commands.slash_command(name='upscale', description='Upscale an image')
     @option(
         'init_image',
@@ -82,6 +82,7 @@ class UpscaleCog(commands.Cog):
         description='Do the upscale before restoring faces. Default: False',
         required=False,
     )
+
     async def dream_handler(self, ctx: discord.ApplicationContext, *,
                             init_image: Optional[discord.Attachment] = None,
                             init_url: Optional[str],
@@ -230,7 +231,7 @@ class UpscaleCog(commands.Cog):
             identify_dream = identifycog.IdentifyCog(self)
             event_loop.create_task(
                 queuehandler.process_dream(identify_dream, queuehandler.GlobalQueue.identify_q.pop(0)))
-
+"""
 
 def setup(bot):
     bot.add_cog(UpscaleCog(bot))
