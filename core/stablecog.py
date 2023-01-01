@@ -166,7 +166,9 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
                             style: Optional[str] = 'None',
                             facefix: Optional[str] = 'None',
                             highres_fix: Optional[bool] = False,
+                            display_nprompt: Optional[bool] = None,
                             clip_skip: Optional[int] = 0):
+
 
         settings.global_var.send_model = False
         # update defaults with any new defaults from settingscog
@@ -185,7 +187,7 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
             sampler = settings.read(guild)['sampler']
         if clip_skip == 0:
             clip_skip = settings.read(guild)['clip_skip']
-
+        display_nprompt = settings.read(guild)['display_nprompt']
         # if a model is not selected, do nothing
         model_name = 'Default'
         model_index = 0
@@ -240,8 +242,9 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
             reply_adds = reply_adds + f'\n Превышен максимум из ``{steps}`` шагов обработки! Это максимум, что я могу сделать...'
         if model_name != 'Default':
             reply_adds = reply_adds + f'\nМодель ИИ: ``{model_name}``'
-#        if negative_prompt != '':
-#            reply_adds = reply_adds + f'\nИсключающие тэги: ``{negative_prompt}``'
+        if display_nprompt == True:
+            if negative_prompt != '':
+                reply_adds = reply_adds + f'\nИсключающие тэги: ``{negative_prompt}``'
         if (width != 512) or (height != 512):
             reply_adds = reply_adds + f'\nРазмер: ``{width}``x``{height}``'
         if guidance_scale != '7.0':
@@ -396,6 +399,7 @@ class StableCog(commands.Cog, name='Stable Diffusion', description='Create image
                 epoch_time = int(time.time())
                 metadata.add_text("parameters", png_response.json().get("info"))
                 file_path = f'{settings.global_var.dir}/{epoch_time}-{queue_object.seed}-{file_name[0:120]}-{i}.png'
+                print(file_path)
                 image.save(file_path, pnginfo=metadata)
                 print(f'Saved image: {file_path}')
 

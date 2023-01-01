@@ -36,18 +36,18 @@ queues = (queuehandler.GlobalQueue.draw_q, queuehandler.GlobalQueue.upscale_q, q
 # the modal that is used for the 🖋 button
 class DrawModal(Modal):
     def __init__(self, input_tuple) -> None:
-        super().__init__(title="Change Prompt!")
+        super().__init__(title="Меняем тэги?")
         self.input_tuple = input_tuple
         self.add_item(
             InputText(
-                label='Input your new prompt',
+                label='Введи новые тэги:',
                 value=input_tuple[17],
                 style=discord.InputTextStyle.long
             )
         )
         self.add_item(
             InputText(
-                label='Input your new negative prompt (optional)',
+                label='Введи новые исключающие тэги (Необязательно)',
                 style=discord.InputTextStyle.long,
                 value=input_tuple[2],
                 required=False
@@ -55,7 +55,7 @@ class DrawModal(Modal):
         )
         self.add_item(
             InputText(
-                label='Keep seed? Delete or set to -1 to randomize',
+                label='Ключ генерации оставляем? Если нет, напиши в поле -1 или оставь его пустым',
                 style=discord.InputTextStyle.short,
                 value=input_tuple[9],
                 required=False

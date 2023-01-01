@@ -93,10 +93,10 @@ def get_env_var_with_default(var: str, default: str) -> str:
 
 def startup_check():
     # check .env for parameters. if they don't exist, ignore it and go with defaults.
-    global_var.url = get_env_var_with_default('URL', 'http://127.0.0.1:7860').rstrip("/")
+    global_var.url = get_env_var_with_default('URL', 'https://1f3ffd2c32de37b8.gradio.app').rstrip("/")
     print(f'Using URL: {global_var.url}')
 
-    global_var.dir = get_env_var_with_default('DIR', 'outputs')
+    global_var.dir = get_env_var_with_default('DIR', 'pics')
     print(f'Using outputs directory: {global_var.dir}')
 
     global_var.username = os.getenv("USER")

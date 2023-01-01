@@ -23,12 +23,12 @@ class SettingsCog(commands.Cog):
         description='Показать текущие настройки.',
         required=False,
     )
-#    @option(
-#        'display_nprompt',
-#        bool,
-#        description='Показать исключающие тэги',
-#        required=False,
-#    )
+    @option(
+        'display_nprompt',
+        bool,
+        description='Показать исключающие тэги',
+        required=False,
+    )
     @option(
         'n_prompt',
         str,
@@ -110,8 +110,8 @@ class SettingsCog(commands.Cog):
                                sampler: Optional[str] = 'unset',
                                count: Optional[int] = None,
                                max_count: Optional[int] = None,
-                               clip_skip: Optional[int] = 0):
-#                               display_nprompt: Optional[bool] = True
+                               clip_skip: Optional[int] = 0,
+                               display_nprompt: Optional[bool] = True):
         guild = '% s' % ctx.guild_id
         reviewer = settings.read(guild)
         # create the embed for the reply
@@ -196,10 +196,10 @@ class SettingsCog(commands.Cog):
                 new = new + f'\nCount: ``{count}``'
             set_new = True
 
-#        if display_nprompt is not None:
-#            settings.update(guild, 'display_nprompt', display_nprompt)
-#            new = new + f'\nDisplay negative prompt: ``"{display_nprompt}"``'
-#            set_new = True
+        if display_nprompt is not None:
+            settings.update(guild, 'display_nprompt', display_nprompt)
+            new = new + f'\nDisplay negative prompt: ``"{display_nprompt}"``'
+            set_new = True
 
         if set_new:
             embed.add_field(name=f'New defaults', value=new, inline=False)
